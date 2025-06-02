@@ -8,7 +8,6 @@ import { usePosRecordAttendanceMutation } from '@/store/api/apiSlice/postApi/tea
 type BarcodeType = NonNullable<CameraViewProps['barcodeScannerSettings']>['barcodeTypes'][number];
 
 export default function App() {
-  // Hooks at the top
   const [facing, setFacing] = useState<'back' | 'front'>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
@@ -19,8 +18,8 @@ export default function App() {
   const steadyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { id } = useLocalSearchParams<{ id: string }>();
-  const {termId} = useLocalSearchParams<{termId: string}>();
-  const termIdParam = parseInt(termId, 10)
+  const { termId } = useLocalSearchParams<{ termId: string }>();
+  const termIdParam = parseInt(termId, 10);
   const idParam = parseInt(id, 10);
   const [recordAttendance] = usePosRecordAttendanceMutation();
 
@@ -68,23 +67,21 @@ export default function App() {
 
   const handleRecordAttendance = async (studentId: number) => {
     try {
-        const response = await recordAttendance({ teachingLoadDetailId: idParam, termId: termIdParam, studentId }).unwrap();
-        console.log('Success response:', response);
-        Alert.alert("Success", "Attendance recorded successfully");
-      } catch (err: any) {
-        console.log('Error response:', err);
-        Alert.alert("Error", err?.data?.message || "Failed to record attendance");
-      }
+      const response = await recordAttendance({ teachingLoadDetailId: idParam, termId: termIdParam, studentId }).unwrap();
+      console.log('Success response:', response);
+      Alert.alert('Success', 'Attendance recorded successfully');
+    } catch (err: any) {
+      console.log('Error response:', err);
+      Alert.alert('Error', err?.data?.message || 'Failed to record attendance');
+    }
   };
 
   const barcodeTypes: BarcodeType[] = ['code39', 'qr'];
 
-  // === RENDERING ===
-
   // Show loading screen while permissions are being fetched
   if (permission === null) {
     return (
-      <View className="flex-1 bg-slate-900 justify-center items-center">
+      <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color="#4f46e5" />
       </View>
     );
@@ -93,17 +90,14 @@ export default function App() {
   // Show permission request screen
   if (!permission.granted) {
     return (
-      <View className="flex-1 bg-slate-900 justify-center items-center p-6">
-        <View className="bg-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl">
-          <Text className="text-white text-2xl font-bold mb-4 text-center">Camera Access Required</Text>
-          <Text className="text-slate-300 text-base mb-8 text-center">
+      <View style={[styles.container, styles.center, { padding: 24 }]}>
+        <View style={styles.permissionBox}>
+          <Text style={styles.permissionTitle}>Camera Access Required</Text>
+          <Text style={styles.permissionText}>
             We need camera permission to scan barcodes and QR codes.
           </Text>
-          <TouchableOpacity
-            className="bg-indigo-600 py-4 px-6 rounded-xl"
-            onPress={requestPermission}
-          >
-            <Text className="text-white text-center font-bold text-lg">Grant Permission</Text>
+          <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+            <Text style={styles.permissionButtonText}>Grant Permission</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -112,74 +106,242 @@ export default function App() {
 
   // Main camera screen
   return (
-    <View className="flex-1" style={StyleSheet.absoluteFillObject}>
+    <View style={styles.flexFill}>
       <StatusBar style="light" />
-
-      <View style={StyleSheet.absoluteFillObject}>
+      <View style={styles.flexFill}>
         <CameraView
-          style={StyleSheet.absoluteFillObject}
+          style={styles.flexFill}
           facing={facing}
           barcodeScannerSettings={{ barcodeTypes }}
           onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
         />
 
         {/* Header */}
-        <View className="absolute top-0 left-0 right-0 bg-black/40 backdrop-blur-md pt-12 pb-4 px-4">
-          <Text className="text-white text-xl font-bold text-center">ID Scanner</Text>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>ID Scanner</Text>
         </View>
 
         {/* Scan area */}
-        <View className="absolute inset-0 justify-center items-center">
+        <View style={styles.scanAreaContainer}>
           <View
             ref={scanAreaRef}
-            className={`w-64 h-64 border-2 rounded-lg ${scanned ? 'border-green-500' : 'border-white'}`}
+            style={[
+              styles.scanArea,
+              { borderColor: scanned ? '#22c55e' /* green-500 */ : '#fff' },
+            ]}
           >
             {scanned && (
-              <View className="absolute inset-0 bg-green-500/20 justify-center items-center">
-                <View className="bg-white/90 p-3 rounded-full">
-                  <View className="bg-green-500 p-2 rounded-full">
-                    <Text className="text-white font-bold text-xl">✓</Text>
+              <View style={styles.scannedOverlay}>
+                <View style={styles.checkmarkContainer}>
+                  <View style={styles.checkmarkBg}>
+                    <Text style={styles.checkmark}>✓</Text>
                   </View>
                 </View>
               </View>
             )}
           </View>
 
-          {!scanned && scanning && (
-            <Text className="text-white mt-6 text-lg">Position barcode within frame</Text>
-          )}
+          {!scanned && scanning && <Text style={styles.scanInstruction}>Position barcode within frame</Text>}
 
           {scanned && (
-            <TouchableOpacity
-              className="bg-indigo-600 py-3 px-8 rounded-xl mt-8"
-              onPress={resetScan}
-            >
-              <Text className="text-white font-bold text-lg">Scan Again</Text>
+            <TouchableOpacity style={styles.scanAgainButton} onPress={resetScan}>
+              <Text style={styles.scanAgainButtonText}>Scan Again</Text>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Bottom controls */}
-        <View className="absolute bottom-0 left-0 right-0 bg-black/40 backdrop-blur-md p-6 flex-row justify-around">
-          <TouchableOpacity
-            className="bg-slate-800/80 w-14 h-14 rounded-full justify-center items-center"
-            onPress={toggleCameraFacing}
-          >
-            <Text className="text-white text-2xl">⟲</Text>
+        <View style={styles.bottomControls}>
+          <TouchableOpacity style={styles.toggleButton} onPress={toggleCameraFacing}>
+            <Text style={styles.toggleButtonText}>⟲</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-indigo-600 w-16 h-16 rounded-full justify-center items-center border-4 border-indigo-400"
+            style={[styles.captureButton, scanning ? styles.captureButtonActive : styles.captureButtonInactive]}
             onPress={() => {
-              if (scanned) {
-                resetScan();
-              }
+              if (scanned) resetScan();
             }}
           >
-            <View className={`w-8 h-8 rounded-sm ${scanning ? 'bg-white' : 'bg-indigo-300'}`} />
+            <View style={[styles.innerCaptureButton, scanning ? styles.innerCaptureActive : styles.innerCaptureInactive]} />
           </TouchableOpacity>
         </View>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  flexFill: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a', // slate-900
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  permissionBox: {
+    backgroundColor: '#1e293b', // slate-800
+    padding: 32,
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  permissionTitle: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  permissionText: {
+    color: '#cbd5e1', // slate-300
+    fontSize: 16,
+    marginBottom: 32,
+    textAlign: 'center',
+  },
+  permissionButton: {
+    backgroundColor: '#4f46e5', // indigo-600
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+  },
+  permissionButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  header: {
+    position: 'absolute',
+    top: 48,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backdropFilter: 'blur(10px)', // note: backdropFilter not supported on React Native; this will be ignored
+    zIndex: 100,
+  },
+  headerText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  scanAreaContainer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scanArea: {
+    width: 256,
+    height: 256,
+    borderWidth: 2,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scannedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(34, 197, 94, 0.125)', // green-500/20
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  checkmarkContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 12,
+    borderRadius: 9999,
+  },
+  checkmarkBg: {
+    backgroundColor: '#22c55e', // green-500
+    padding: 8,
+    borderRadius: 9999,
+  },
+  checkmark: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 28,
+    textAlign: 'center',
+  },
+  scanInstruction: {
+    marginTop: 24,
+    color: '#fff',
+    fontSize: 18,
+  },
+  scanAgainButton: {
+    marginTop: 32,
+    backgroundColor: '#4f46e5', // indigo-600
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 20,
+  },
+  scanAgainButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  bottomControls: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  toggleButton: {
+    backgroundColor: 'rgba(71, 85, 105, 0.8)', // slate-700/80
+    width: 56,
+    height: 56,
+    borderRadius: 9999,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  toggleButtonText: {
+    color: '#fff',
+    fontSize: 28,
+  },
+  captureButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 9999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: '#6366f1', // indigo-400
+  },
+  captureButtonActive: {
+    borderColor: '#6366f1',
+  },
+  captureButtonInactive: {
+    borderColor: '#a5b4fc', // indigo-300
+  },
+  innerCaptureButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 4,
+  },
+  innerCaptureActive: {
+    backgroundColor: '#fff',
+  },
+  innerCaptureInactive: {
+    backgroundColor: '#c7d2fe', // indigo-300
+  },
+});

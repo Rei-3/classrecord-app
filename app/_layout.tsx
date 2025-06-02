@@ -19,7 +19,7 @@ import store  from "@/store/api";
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: "/",
 };
 
 SplashScreen.preventAutoHideAsync();
@@ -60,6 +60,7 @@ function RootLayoutNav() {
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(protected)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="unauthorized" options={{ headerShown: false }} />
           <Stack.Screen name="profile" options={{ headerShown: false }} />
         </Stack>

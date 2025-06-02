@@ -87,7 +87,7 @@ export default function RegisterScreen() {
         ...data,
         mname: data.mname || "",
       }).unwrap();
-      console.log("Registration response:", register);
+      // console.log("Registration response:", register);
       setTimeout(() => {
         setLoading(false);
         setShowOtpModal(true);
@@ -515,7 +515,7 @@ export default function RegisterScreen() {
         <Modal visible={isLoading} transparent={true} animationType="fade">
           <View className="flex-1 justify-center items-center bg-black/50">
             <DefaultModal isOpen={true}>
-              <Text className="mb-4">Registering</Text>
+              <Text className="mb-4 dark">Registering</Text>
               <Loading size="large" color="text-blue-500" fullScreen={false} />
             </DefaultModal>
           </View>

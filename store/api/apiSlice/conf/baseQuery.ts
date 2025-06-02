@@ -13,10 +13,26 @@ import {
     setAuthToken, 
     setRefreshToken 
   } from "@/lib/utils/authUtils";
+
+  import Constants from "expo-constants";
+
+  interface ExpoExtraConfig {
+    apiKey: string;
+    secretKey: string;
+    baseEndpoint: string;
+  }
+
+  const extraConfig = Constants.expoConfig?.extra as ExpoExtraConfig;
+
+  const {
+    apiKey,
+    secretKey,
+    baseEndpoint,
+  } = extraConfig || {};
   
   // ⚠️ baseQuery must be async now due to async token
   export const baseQueryWithoutReauth = fetchBaseQuery({
-    baseUrl: process.env.EXPO_PUBLIC_BASE_ENDPOINT, // expo uses EXPO_PUBLIC_
+    baseUrl: baseEndpoint, // expo uses EXPO_PUBLIC_
     prepareHeaders: async (headers) => {
       const token = await getAuthToken(); // ⬅️ Async
   
@@ -26,8 +42,8 @@ import {
   
       headers.set("Content-Type", "application/json");
       headers.set("Accept", "application/json");
-      headers.set("API_KEY", `${process.env.EXPO_PUBLIC_API_KEY}`);
-      headers.set("SECRET_KEY", `${process.env.EXPO_PUBLIC_SECRET_KEY}`);
+      headers.set("API_KEY", apiKey);
+      headers.set("SECRET_KEY", secretKey);
   
       return headers;
     },
@@ -75,13 +91,13 @@ import {
       }
   
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_ENDPOINT}${process.env.EXPO_PUBLIC_REFRESH}`,
+        `${baseEndpoint}${process.env.EXPO_PUBLIC_REFRESH_TOKEN}`,
         {
           method: "POST",
           headers: {
             'Content-Type': 'application/json',
-            "API_KEY": `${process.env.EXPO_PUBLIC_API_KEY}`,
-            "SECRET_KEY": `${process.env.EXPO_PUBLIC_SECRET_KEY}`,
+            "API_KEY": apiKey,
+            "SECRET_KEY": secretKey,
           },
           body: JSON.stringify({ refreshToken }),
         }
@@ -101,7 +117,7 @@ import {
   
       return true;
     } catch (error) {
-      console.error("Failed to refresh token:", error);
+
       return false;
     }
   }
